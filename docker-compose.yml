@@ -1,14 +1,14 @@
 version: '3'
 services:
-  hydra:
+  app:
     build: .
     ports:
-      - "80:3000"
+      - "3000:3000"
     volumes:
       - ./chrome_profiles:/app/chrome_profiles
       - ./logs:/app/logs
     environment:
-      - VITE_API_URL=http://144.126.225.177
-      - DISPLAY=:99
+      - NODE_ENV=production
+      - HOST=0.0.0.0
     restart: unless-stopped
-    command: sh -c "npm run build && npm run preview"
+    command: npm run preview

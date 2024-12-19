@@ -28,12 +28,11 @@ RUN npm install
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p logs chrome_profiles
+RUN mkdir -p chrome_profiles logs
 
 # Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV DISPLAY=:99
 ENV HOST=0.0.0.0
+ENV PORT=3000
 
 # Build the application
 RUN npm run build

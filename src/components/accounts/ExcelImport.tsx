@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { ExcelService } from '../../services/excel/excelService';
 import { Button } from '../ui/Button';
+import { Account } from '../../types/account';
 
 interface ExcelImportProps {
   onImport: (accounts: Account[]) => void;
@@ -20,7 +21,8 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
         return;
       }
 
-      await ExcelService.saveExcelFile(file);
+      const accounts = await ExcelService.saveExcelFile(file);
+      onImport(accounts);
       toast.success('Excel file uploaded successfully');
 
       // Reset file input
