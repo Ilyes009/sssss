@@ -1,0 +1,13 @@
+flask
+flask-session
+selenium
+webdriver_manager
+pandas
+colorama
+keyauth
+discord.py
+pyperclip
+gunicorn
+panel
+selenium-wire
+python-dotenv

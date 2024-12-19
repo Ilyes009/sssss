@@ -1,0 +1,12 @@
+version: '3'
+services:
+  hydra:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./chrome_profiles:/app/chrome_profiles
+      - ./logs:/app/logs
+    environment:
+      - DISPLAY=:99
+    restart: unless-stopped

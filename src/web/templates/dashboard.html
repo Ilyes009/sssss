@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-6">Marketplace Buy Tool</h2>
+        
+        <form id="marketplaceForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Item Code</label>
+                <input type="text" id="itemCode" required
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Sub Account Max Purchase</label>
+                    <input type="number" id="subPurchase" min="0" value="0"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Main Account Max Purchase</label>
+                    <input type="number" id="mainPurchase" min="0" value="0"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+            </div>
+            
+            <button type="submit"
+                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                Start Process
+            </button>
+        </form>
+        
+        <div id="results" class="mt-6 hidden">
+            <h3 class="text-lg font-semibold mb-2">Results</h3>
+            <div id="resultsContent" class="space-y-2"></div>
+            
+            <button id="executePurchase" 
+                class="mt-4 w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 hidden">
+                Execute Purchase
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('marketplaceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const data = {
+        item_code: document.getElementById('itemCode').value,
+        sub_purchase: document.getElementById('subPurchase').value,
+        main_purchase: document.getElementById('mainPurchase').value
+    };
+    
+    try {
+        const response = await axios.post('/api/process', data);
+        const results = response.data;
+        
+        const resultsDiv = document.getElementById('results');
+        const resultsContent = document.getElementById('resultsContent');
+        const executePurchaseBtn = document.getElementById('executePurchase');
+        
+        resultsContent.innerHTML = `
+            <p>Current Amount Of Sale Orders: ${results.sale_orders || 'N/A'}</p>
+            <p>Transfer Status: ${results.sale_orders <= results.confirmed_accounts.length ? 'Possible' : 'Not Enough Accounts'}</p>
+            
+            <div class="mt-2">
+                <p class="font-semibold">Accounts that may already own the item: ${results.owned_accounts.length}</p>
+                <p class="text-sm text-gray-600">${results.owned_accounts.join(', ')}</p>
+            </div>
+            
+            <div class="mt-2">
+                <p class="font-semibold">Accounts ready for purchase: ${results.confirmed_accounts.length}</p>
+                <p class="text-sm text-gray-600">${results.confirmed_accounts.join(', ')}</p>
+            </div>
+        `;
+        
+        resultsDiv.classList.remove('hidden');
+        if (results.confirmed_accounts.length > 0) {
+            executePurchaseBtn.classList.remove('hidden');
+        }
+        
+    } catch (error) {
+        alert('An error occurred while processing the request.');
+        console.error(error);
+    }
+});
+
+document.getElementById('executePurchase').addEventListener('click', async () => {
+    try {
+        const response = await axios.post('/api/execute');
+        const results = response.data;
+        
+        let summary = results.map(result => 
+            `${result.email}: ${result.status}${result.error ? ` (${result.error})` : ''}`
+        ).join('\n');
+        
+        alert('Purchase Results:\n\n' + summary);
+        
+    } catch (error) {
+        alert('An error occurred while executing purchases.');
+        console.error(error);
+    }
+});
+</script>
+{% endblock %}
