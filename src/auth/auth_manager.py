@@ -1,33 +1,28 @@
-import hashlib
-import sys
-from keyauth import api
 import os
-from colorama import Fore
+from flask import session
 
 class AuthManager:
     def __init__(self):
-        self.keyauthapp = api(
-            name="HydraV1",
-            ownerid="fV0uvYnrch",
-            version="1.0",
-            hash_to_check=self._get_checksum()
-        )
+        self.password_file = '/app/password.txt'
 
-    def _get_checksum(self):
-        md5_hash = hashlib.md5()
-        with open(''.join(sys.argv), "rb") as file:
-            md5_hash.update(file.read())
-        return md5_hash.hexdigest()
-
-    def verify_license(self, key=None):
+    def verify_password(self, password):
         try:
-            if not key:
-                key = os.getenv('ACCESS_KEY')
+            if not os.path.exists(self.password_file):
+                return False, "Password file not found"
             
-            if not key:
-                return False, "No access key provided"
+            with open(self.password_file, 'r') as file:
+                correct_password = file.read().strip()
+                
+            if password == correct_password:
+                session['authenticated'] = True
+                return True, "Login successful"
             
-            self.keyauthapp.license(key)
-            return True, "Login successful"
+            return False, "Invalid password"
         except Exception as e:
             return False, str(e)
+
+    def is_authenticated(self):
+        return session.get('authenticated', False)
+
+    def logout(self):
+        session.pop('authenticated', None)

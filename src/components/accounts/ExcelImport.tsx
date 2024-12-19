@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
-import { read, utils } from 'xlsx';
-import { Account } from '../../types/account';
+import { toast } from 'react-hot-toast';
+import { ExcelService } from '../../services/excel/excelService';
 import { Button } from '../ui/Button';
 
 interface ExcelImportProps {
@@ -14,29 +14,23 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const workbook = read(event.target?.result, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const data = utils.sheet_to_json<any>(worksheet);
-
-        const accounts: Account[] = data.map((row: any) => ({
-          email: row.email,
-          status: row['account status']?.toLowerCase() === 'main' ? 'main' : 'sub',
-          password: row.Upassword
-        }));
-
-        onImport(accounts);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      } catch (error) {
-        console.error('Error parsing Excel file:', error);
+    try {
+      if (!ExcelService.validateExcelFile(file)) {
+        toast.error('Please upload a valid Excel file (.xlsx or .xls)');
+        return;
       }
-    };
-    reader.readAsBinaryString(file);
+
+      await ExcelService.saveExcelFile(file);
+      toast.success('Excel file uploaded successfully');
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Error handling Excel file:', error);
+      toast.error('Failed to process Excel file');
+    }
   };
 
   return (

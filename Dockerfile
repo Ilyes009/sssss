@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM node:18-slim
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -18,9 +18,11 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
 # Set up working directory
 WORKDIR /app
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
 
 # Copy application code
 COPY . .
@@ -31,9 +33,12 @@ RUN mkdir -p logs chrome_profiles
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV DISPLAY=:99
+ENV HOST=0.0.0.0
+
+# Build the application
+RUN npm run build
 
 # Expose port
-EXPOSE 5000
+EXPOSE 3000
 
-# Start script
-CMD ["python", "main.py"]
+# Start command is defined in docker-compose.yml

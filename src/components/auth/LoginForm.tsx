@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { KeyAuthManager } from '../../utils/keyauth';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 
 const LoginForm = () => {
-  const [key, setKey] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -13,16 +12,21 @@ const LoginForm = () => {
     setLoading(true);
 
     try {
-      const keyauth = KeyAuthManager.getInstance();
-      await keyauth.initialize();
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await response.json();
       
-      const isValid = await keyauth.validateLicense(key);
-      
-      if (isValid) {
+      if (data.success) {
         toast.success('Successfully authenticated!');
-        // Handle successful login
+        window.location.href = '/dashboard';
       } else {
-        toast.error('Invalid license key');
+        toast.error('Invalid password');
       }
     } catch (error) {
       toast.error('Authentication failed');
@@ -33,31 +37,33 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white rounded-xl shadow-2xl p-8">
-        <div>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            Welcome to Hydra HQ
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-800">
+      <div className="max-w-md w-full space-y-8 bg-white rounded-xl shadow-lg p-10">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+            MarketplaceBeta
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your authorization key to continue
+          <p className="mt-2 text-gray-600">
+            Enter your password to access the panel
           </p>
         </div>
+        
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="key" className="block text-sm font-medium text-gray-700">
-              Authorization Key
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
             </label>
             <Input
-              id="key"
+              id="password"
               type="password"
-              value={key}
-              onChange={(e) => setKey(e.target.value)}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
               className="mt-1"
-              placeholder="Enter your key"
+              placeholder="Enter your password"
             />
           </div>
+          
           <Button
             type="submit"
             className="w-full"
@@ -66,6 +72,10 @@ const LoginForm = () => {
             {loading ? 'Authenticating...' : 'Login'}
           </Button>
         </form>
+
+        <div className="text-center text-sm text-gray-600">
+          Need help? Contact @chipolata141 on discord
+        </div>
       </div>
     </div>
   );
